@@ -14,7 +14,7 @@ import { ProductCategoryService } from '../product-categories/product-category.s
   providedIn: 'root'
 })
 export class ProductService {
-  private productsUrl = 'api/products';
+  private productsUrl = 'api/product';
   private suppliersUrl = this.supplierService.suppliersUrl;
 
 private selectedProductSubject = new BehaviorSubject<number>(0);

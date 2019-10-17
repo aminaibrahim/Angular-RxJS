@@ -14,10 +14,13 @@ import { ProductCategoryService } from '../product-categories/product-category.s
 })
 export class ProductListComponent {
   pageTitle = 'Product List';
-  errorMessage = '';
+ 
 private selectedCategoryIdSubject = new BehaviorSubject<number>(0);
 selectedCategoryAction$ = this.selectedCategoryIdSubject.asObservable();
 
+
+private errorMessagesSubject = new Subject<string>();
+errorMessagesAction$ =  this.errorMessagesSubject.asObservable();
 
   constructor(private productService: ProductService, private productCategoryService: ProductCategoryService) { }
 
@@ -26,14 +29,14 @@ selectedCategoryAction$ = this.selectedCategoryIdSubject.asObservable();
   .pipe(map(([products, selectedcategoryId]) => products.filter(product =>
      selectedcategoryId? product.categoryId === selectedcategoryId : true)),
 catchError(err => {
-    this.errorMessage = err;
+    this.errorMessagesSubject.next(err);
     return EMPTY;
   }));
 
 
 
       categories$ = this.productCategoryService.productCategories$.pipe(catchError(err => {
-        this.errorMessage = err;
+        this.errorMessagesSubject.next(err);
         return EMPTY;
       }))
 
