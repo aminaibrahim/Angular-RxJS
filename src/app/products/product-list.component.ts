@@ -4,7 +4,7 @@ import { Observable, EMPTY, combineLatest, forkJoin, Subject, BehaviorSubject } 
 
 import { Product } from './product';
 import { ProductService } from './product.service';
-import { catchError, tap, map, startWith } from 'rxjs/operators';
+import { catchError, tap, map, startWith, merge } from 'rxjs/operators';
 import { ProductCategoryService } from '../product-categories/product-category.service';
 
 @Component({
@@ -25,7 +25,7 @@ errorMessagesAction$ =  this.errorMessagesSubject.asObservable();
   constructor(private productService: ProductService, private productCategoryService: ProductCategoryService) { }
 
 
-  products$ = combineLatest([this.productService.productWithCategory$, this.selectedCategoryAction$])
+  products$ = combineLatest([this.productService.addObject$, this.selectedCategoryAction$])
   .pipe(map(([products, selectedcategoryId]) => products.filter(product =>
      selectedcategoryId? product.categoryId === selectedcategoryId : true)),
 catchError(err => {
@@ -33,19 +33,21 @@ catchError(err => {
     return EMPTY;
   }));
 
-
+ 
 
       categories$ = this.productCategoryService.productCategories$.pipe(catchError(err => {
         this.errorMessagesSubject.next(err);
         return EMPTY;
       }))
 
+     
 
-  // onAdd(): void {
-  //   console.log('Not yet implemented');
-  // }
 
   onSelected(categoryId: string): void {
 this.selectedCategoryIdSubject.next(+categoryId);
+  }
+
+  onAdd(product): void {
+this.productService.addProduct();
   }
 }

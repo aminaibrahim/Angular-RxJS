@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
-import { throwError, combineLatest, BehaviorSubject } from 'rxjs';
-import { catchError, tap, map } from 'rxjs/operators';
+import { throwError, combineLatest, BehaviorSubject, Subject, merge } from 'rxjs';
+import { catchError, tap, map, scan } from 'rxjs/operators';
 
 import { Product } from './product';
 
@@ -14,12 +14,16 @@ import { ProductCategoryService } from '../product-categories/product-category.s
   providedIn: 'root'
 })
 export class ProductService {
-  private productsUrl = 'api/product';
+  private productsUrl = 'api/products';
   private suppliersUrl = this.supplierService.suppliersUrl;
 
 private selectedProductSubject = new BehaviorSubject<number>(0);
 selectedProductAction$ =  this.selectedProductSubject.asObservable();
 
+
+
+private addNewInsertedSubject = new Subject<Product>();
+addNewInsertedAction$ = this.addNewInsertedSubject.asObservable();
 
 
   products$ = this.http.get<Product[]>(this.productsUrl)
@@ -46,10 +50,28 @@ selectedProductAction$ =  this.selectedProductSubject.asObservable();
     selectedProduct$ = combineLatest([this. productWithCategory$, this.selectedProductAction$])
     .pipe( tap(data => console.log(data)),
       map(([productswithCategory, selectedProduct]) =>
-        productswithCategory.find(singleproduct=>singleproduct.id === selectedProduct)
+        productswithCategory.find(singleproduct => singleproduct.id === selectedProduct)
       ),
       tap(data => console.log(data))
       );
+
+// tslint:disable-next-line: deprecation
+addObject$ =  merge(
+  this.productWithCategory$,
+  this.addNewInsertedAction$
+)
+  .pipe(
+    scan((acc: Product[], value: Product) => [...acc, value]),
+    catchError(err => {
+      console.error(err);
+      return throwError(err);
+    })
+  );
+
+
+
+
+
 
   constructor(private http: HttpClient,
               private supplierService: SupplierService,
@@ -64,6 +86,7 @@ selectedProductAction$ =  this.selectedProductSubject.asObservable();
       description: 'Our new product',
       price: 8.9,
       categoryId: 3,
+      categoryName: "newItem",
       category: 'Toolbox',
       quantityInStock: 30
     };
@@ -86,8 +109,11 @@ selectedProductAction$ =  this.selectedProductSubject.asObservable();
   }
 
 
-  selectedProduct =(selectedId)=>{
+  selectedProduct =(selectedId) => {
     this.selectedProductSubject.next(selectedId);
+  }
+  addProduct = () => {
+    this.addNewInsertedSubject.next(this.fakeProduct());
   }
 
 }
