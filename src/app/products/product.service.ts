@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
 import { throwError, combineLatest, BehaviorSubject, Subject, merge } from 'rxjs';
-import { catchError, tap, map, scan } from 'rxjs/operators';
+import { catchError, tap, map, scan, shareReplay } from 'rxjs/operators';
 
 import { Product } from './product';
 
@@ -28,8 +28,10 @@ addNewInsertedAction$ = this.addNewInsertedSubject.asObservable();
 
   products$ = this.http.get<Product[]>(this.productsUrl)
     .pipe(
-      // tap(data => console.log('products', JSON.stringify(data))),
-      catchError(this.handleError)
+      tap(data => console.log('products', JSON.stringify(data))),
+      shareReplay(1),
+      catchError(this.handleError),
+      
     );
 
 
@@ -43,7 +45,8 @@ addNewInsertedAction$ = this.addNewInsertedSubject.asObservable();
         price: product.price * 2,
         categoryName: categories.find(c => product.categoryId === c.id).name,
         searchKey: [product.productName],
-      }) as Product)
+      }) as Product),
+      shareReplay(1),
       )
     );
 
@@ -52,7 +55,8 @@ addNewInsertedAction$ = this.addNewInsertedSubject.asObservable();
       map(([productswithCategory, selectedProduct]) =>
         productswithCategory.find(singleproduct => singleproduct.id === selectedProduct)
       ),
-      tap(data => console.log(data))
+      tap(data => console.log(data)),
+      shareReplay(1),
       );
 
 // tslint:disable-next-line: deprecation
@@ -86,7 +90,7 @@ addObject$ =  merge(
       description: 'Our new product',
       price: 8.9,
       categoryId: 3,
-      categoryName: "newItem",
+      categoryName: 'newItem',
       category: 'Toolbox',
       quantityInStock: 30
     };
@@ -109,7 +113,7 @@ addObject$ =  merge(
   }
 
 
-  selectedProduct =(selectedId) => {
+  selectedProduct = (selectedId) => {
     this.selectedProductSubject.next(selectedId);
   }
   addProduct = () => {
